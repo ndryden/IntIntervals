@@ -1,4 +1,7 @@
+from builtins import range
+
 """Represent disjoint integer-valued intervals."""
+
 
 class IntIntervals(object):
     """Represent a set of disjoint integer-valued intervals with set operations.
@@ -150,7 +153,7 @@ class IntIntervals(object):
     def __iter__(self):
         """Support iteration over all entries within the intervals."""
         for interval in self.intervals:
-            for i in xrange(interval[0], interval[1]+1):
+            for i in range(interval[0], interval[1]+1):
                 yield i
 
     def __eq__(self, other):
