@@ -2,6 +2,8 @@ from builtins import range
 
 """Represent disjoint integer-valued intervals."""
 
+_empty_list = list()
+
 
 class IntIntervals(object):
     """Represent a set of disjoint integer-valued intervals with set operations.
@@ -15,20 +17,21 @@ class IntIntervals(object):
 
     """
 
-    def __init__(self, src, is_sorted=False):
+    def __init__(self, src=_empty_list, is_sorted=False, is_end_inclusive=True):
         """Create new intervals.
 
-        src is what to create the intervals from. One of the following:
+        :param src: what to create the intervals from. One of the following:
         - an int
         - a list of integers
         - a list of tuples (a, b) representing disjoint intervals
         - another IntIntervals object
-        is_sorted indicates whether list arguments are already sorted.
+        :param is_sorted: indicates whether list arguments are already sorted.
+        :param is_end_inclusive: indicates whether last values in tuples are inclusive
 
         If the data is sorted, this is O(n) in the number of inputs; otherwise
         it is O(n logn) due to the sorting.
-
         """
+
         if isinstance(src, int):
             self.intervals = [(src, src)]
             return
@@ -64,9 +67,18 @@ class IntIntervals(object):
                     cur_right = i
             self.intervals.append((cur_left, cur_right))
         else:
+            def opt_inclusive(start, end):
+                if is_end_inclusive or start == end:
+                    return start, end
+
+                return start, end - 1
+
             # Already have disjoint intervals, but may not be maximal.
-            cur_intv = src[0]
+            cur_intv = opt_inclusive(*src[0])
+
             for interval in src[1:]:
+                interval = opt_inclusive(*interval)
+
                 if interval[0] == cur_intv[1] + 1:
                     # Intervals are contiguous.
                     cur_intv = (cur_intv[0], interval[1])
@@ -196,17 +208,48 @@ class IntIntervals(object):
         """Return whether this is a strict superset of other."""
         return self.issuperset(other) and self != other
 
-    def union(self, other):
-        """Return the union of this with other.
+    def feather(self, amount, inplace=False):
+        """
+        Will feather each interval by `amount` and return result
+        :param amount: integer of number to feather intervals
+        :param inplace: (optional) set to true to modify `self` instead of
+        returning a copy
+
+        :return: feathered results
+        """
+        feather = IntIntervals([(start - amount, end + amount)
+                                for start, end in self.intervals], is_sorted=True)
+
+        if inplace:
+            self.intervals = feather.intervals
+            return self
+
+        return feather
+
+    def union(self, other, inplace=False):
+        """
+        Return the union of `self` with `other`.
 
         Works in O(n) time where n is the number of intervals in both
         IntIntervals.
 
+        :param other: other IntInterval with which to union against
+        :param inplace: (optional) set to True to return an updated `self` and
+                        not a copy
+        :return: union of `self` and `other`
         """
         if not self:
+            if inplace:
+                self.intervals = other.intervals[:]
+                return self
+
             return other.copy()
         if not other:
+            if inplace:
+                return self
+
             return self.copy()
+
         union = []
         # top is the current set of intervals we draw from to attempt to extend.
         i = 0  # Index into top.
@@ -255,7 +298,13 @@ class IntIntervals(object):
                     cur_interval = None
         if cur_interval is not None:
             union.append(cur_interval)
-        return IntIntervals(union, is_sorted=True)
+
+        union = IntIntervals(union, is_sorted=True)
+        if inplace:
+            self.intervals = union.intervals
+            return self
+
+        return union
 
     def __or__(self, other):
         """Return the union of this with other."""
