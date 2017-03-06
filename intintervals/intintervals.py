@@ -2,8 +2,6 @@ from builtins import range
 
 """Represent disjoint integer-valued intervals."""
 
-_empty_list = list()
-
 
 class IntIntervals(object):
     """Represent a set of disjoint integer-valued intervals with set operations.
@@ -17,7 +15,7 @@ class IntIntervals(object):
 
     """
 
-    def __init__(self, src=_empty_list, is_sorted=False, is_end_inclusive=True):
+    def __init__(self, src=None, is_sorted=False, is_end_inclusive=True):
         """Create new intervals.
 
         :param src: what to create the intervals from. One of the following:
@@ -31,6 +29,9 @@ class IntIntervals(object):
         If the data is sorted, this is O(n) in the number of inputs; otherwise
         it is O(n logn) due to the sorting.
         """
+
+        if src is None:
+            src = list()
 
         if isinstance(src, int):
             self.intervals = [(src, src)]
