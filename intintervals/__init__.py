@@ -1,4 +1,2 @@
-import intintervals
-
-IntIntervals = intintervals.IntIntervals
+from .intintervals import IntIntervals
 __all__ = ['IntIntervals']

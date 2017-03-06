@@ -1,6 +1,7 @@
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 setup(name="intintervals",
-      version="0.01",
+      version="0.02",
       description="Efficiently store disjoint integer intervals",
-      packages=["intintervals"])
+      packages=find_packages())
+
